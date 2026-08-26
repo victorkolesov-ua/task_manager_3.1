@@ -1,19 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import './style.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
-    : null;
-
+const API_URL = '/api/tasks';
 const app = document.querySelector('#app');
 
 let tasks = [];
@@ -116,77 +103,38 @@ function normalizeTask(row = {}) {
 }
 
 async function loadTasks() {
-  if (!supabase) {
-    tasks = [];
-    return;
-  }
-
   try {
-    const { data, error } = await supabase.from('tasks').select('id, description, scheduled_at, completed').eq('is_deleted', false).order('scheduled_at', { ascending: true });
-
-    if (error) {
-      throw error;
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
 
+    const data = await response.json();
     tasks = (Array.isArray(data) ? data : []).map(normalizeTask);
   } catch (error) {
-    console.error('Помилка читання задач з Supabase:', error);
+    console.error('Помилка читання задач з локального JSON:', error);
     tasks = [];
   }
 }
 
 async function saveTasks() {
-  if (!supabase) {
-    return;
-  }
-
   try {
-    const rows = tasks.map((task) => ({
-      id: task.id,
-      description: task.description,
-      scheduled_at: task.scheduledAt,
-      completed: task.completed,
-    }));
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tasks),
+    });
 
-    const { error } = await supabase.from('tasks').upsert(rows, { onConflict: 'id' });
-
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+
+    const savedTasks = await response.json();
+    tasks = (Array.isArray(savedTasks) ? savedTasks : []).map(normalizeTask);
   } catch (error) {
-    console.error('Помилка збереження задач в Supabase:', error);
-  }
-}
-
-async function DB_Hide_Task(taskId) {
-  if (!supabase) {
-    return;
-  }
-
-  try {
-    const { error } = await supabase.from('tasks').update({ is_deleted: true }).eq('id', taskId);
-
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.error('Помилка видалення(приховання) задачі:', error);
-  }
-}
-
-async function deleteTask(taskId) {
-  if (!supabase) {
-    return;
-  }
-
-  try {
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
-
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.error('Помилка видалення задачі:', error);
+    console.error('Помилка збереження задач в tasks.json:', error);
   }
 }
 
@@ -374,7 +322,7 @@ tasksBody.addEventListener('click', async (event) => {
 
   if (action === 'delete-task') {
     tasks = tasks.filter((task) => task.id !== id);
-    await DB_Hide_Task(id);
+    await saveTasks();
 
     if (editingTaskId === id) {
       resetFormState();
@@ -408,13 +356,11 @@ cancelEditButton.addEventListener('click', () => {
   resetFormState();
 });
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+loadTasks().then(() => {
+  renderApp();
+}).catch((error) => {
+  console.error('Unable to initialize tasks from local storage:', error);
   tasksBody.innerHTML = `
-    <div class="empty-row">Налаштуйте Supabase env vars у Vercel: VITE_SUPABASE_URL і VITE_SUPABASE_ANON_KEY.</div>
+    <div class="empty-row">Не вдалося завантажити задачі з local JSON storage.</div>
   `;
-} else {
-  loadTasks().then(() => {
-    renderApp();
-  });
-}
+});
