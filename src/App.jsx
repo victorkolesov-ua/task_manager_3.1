@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import SettingsPage from './pages/SettingsPage';
 import TasksPage from './pages/TasksPage';
+import AddTaskPage from './pages/AddTaskPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/tasks/new" element={<AddTaskPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>

@@ -50,6 +50,18 @@ function fromBase64(value) {
     return new TextDecoder().decode(bytes);
 }
 
+async function parseGitHubError(response, operation) {
+    const rawText = await response.text();
+
+    try {
+        const parsed = JSON.parse(rawText);
+        const message = parsed.message || parsed.error || rawText || 'Unknown GitHub error';
+        return `${operation} failed (${response.status}): ${message}`;
+    } catch {
+        return `${operation} failed (${response.status}): ${rawText || 'Unknown GitHub error'}`;
+    }
+}
+
 export function buildGitHubFileUrl({ owner, repo, branch = 'main', path = 'tasks.json' }) {
     return `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
 }
@@ -74,8 +86,7 @@ export async function fetchTasksFromGitHub(config) {
     }
 
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GitHub read failed (${response.status}): ${errorText}`);
+        throw new Error(await parseGitHubError(response, 'GitHub read'));
     }
 
     const payload = await response.json();
@@ -130,8 +141,7 @@ export async function saveTasksToGitHub(tasks, config) {
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GitHub write failed (${response.status}): ${errorText}`);
+        throw new Error(await parseGitHubError(response, 'GitHub write'));
     }
 
     return tasks;

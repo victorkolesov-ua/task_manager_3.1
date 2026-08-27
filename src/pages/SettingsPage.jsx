@@ -29,7 +29,11 @@ export default function SettingsPage() {
             fetchTasksFromGitHub(savedConfig)
                 .then((tasks) => {
                     setTaskCount(tasks.length);
-                    setStatus('GitHub storage connected');
+                    setStatus(
+                        tasks.length > 0
+                            ? 'GitHub storage connected'
+                            : 'GitHub storage connected — no tasks found',
+                    );
                 })
                 .catch((error) => {
                     setStatus(error.message || 'GitHub storage connection failed');
@@ -75,7 +79,11 @@ export default function SettingsPage() {
             setConfig(trimmedConfig);
             const tasks = await fetchTasksFromGitHub(trimmedConfig);
             setTaskCount(tasks.length);
-            setStatus('GitHub storage connected');
+            setStatus(
+                tasks.length > 0
+                    ? 'GitHub storage connected'
+                    : 'GitHub storage connected — no tasks found',
+            );
         } catch (error) {
             setStatus(error.message || 'Unable to connect to GitHub');
         }

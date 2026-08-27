@@ -20,6 +20,12 @@ export default function Layout({ children }) {
                         Tasks
                     </NavLink>
                     <NavLink
+                        to="/tasks/new"
+                        className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                    >
+                        Add New Task
+                    </NavLink>
+                    <NavLink
                         to="/settings"
                         className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
                     >
