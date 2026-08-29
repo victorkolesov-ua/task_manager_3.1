@@ -1,34 +1,56 @@
-# Task Manager 2
+# Task Manager 3
 
-A simple browser-based JavaScript app built with Vite.
+A React + Vite task management app with a small Express API and local JSON storage for task persistence.
 
-## Project overview
+## Stack
 
-This project is a small front-end application for managing tasks in the browser. It uses vanilla JavaScript and Vite for fast local development and build tooling.
+- React 19
+- React Router
+- Vite 8
+- Express 5
+- Node.js
+- ESLint + Prettier
+- Local JSON file persistence for the API
+- Browser localStorage for client-side app state and GitHub config
+- GitHub API integration for optional tasks sync via the task service
 
-## Features
+## App overview
 
-- Fast development server with Vite
-- Browser-based UI powered by JavaScript
-- Modular ES module structure
-- Simple asset and stylesheet setup
+This project is a browser-based task manager with multiple pages for listing, creating, and managing tasks. The frontend is built in React and the backend is a lightweight Express service that serves task data from a JSON file.
 
-## Project structure
+The dev setup runs both processes together:
+
+- Frontend: Vite on http://localhost:5173
+- API: Express on http://localhost:3000
+- Vite proxy forwards /api requests to the backend
+
+## Folder structure
 
 ```text
 .
 ├── index.html
 ├── package.json
+├── vite.config.js
+├── server.js
 ├── eslint.config.js
-├── public/
-├── src/
-│   ├── main.js
-│   ├── counter.js
-│   ├── style.css
-│   └── assets/
-├── .gitignore
+├── tasks.json
 ├── README.md
-└── package-lock.json
+├── src/
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── styles.css
+│   ├── components/
+│   │   └── Layout.jsx
+│   ├── pages/
+│   │   ├── AddTaskPage.jsx
+│   │   ├── HomePage.jsx
+│   │   ├── NotFoundPage.jsx
+│   │   ├── SettingsPage.jsx
+│   │   └── TasksPage.jsx
+│   └── services/
+│       └── githubTaskService.js
+├── storage/
+└── node_modules/
 ```
 
 ## Requirements
@@ -36,46 +58,63 @@ This project is a small front-end application for managing tasks in the browser.
 - Node.js 18+
 - npm
 
-## Installation
+## Install
 
 ```bash
 npm install
 ```
 
-## Running the app
+## Run the app
 
-Start the Vite development server:
+Start both the Express API and the Vite frontend together:
 
 ```bash
 npm run dev
 ```
 
-Then open the local URL shown in the terminal, usually:
+Then open:
 
 ```text
 http://localhost:5173
 ```
 
-## Production build
+The app will talk to the backend at:
 
-Create a production build:
+```text
+http://localhost:3000/api
+```
+
+### Useful scripts
 
 ```bash
+# Start only the API server
+npm run server
+
+# Run the frontend only
+npx vite --host
+
+# Build the production frontend bundle
 npm run build
-```
 
-Preview the built app locally:
-
-```bash
+# Preview production build locally
 npm run preview
+
+# Lint the project
+npm run lint
 ```
 
-## Linting
+## API
 
-```bash
-npx eslint .
-```
+The backend is defined in [server.js](server.js) and exposes these endpoints:
+
+- GET /api/health
+- GET /api/tasks
+- POST /api/tasks
+
+The tasks are stored in [tasks.json](tasks.json), and the server creates it automatically if it does not exist.
 
 ## Notes
 
-This project uses ES modules and browser globals such as `document` and `window`, so it is designed for client-side JavaScript execution in the browser.
+- The frontend uses React Router for page navigation.
+- The app stores local task data in browser storage as well as optional GitHub configuration through the service in [src/services/githubTaskService.js](src/services/githubTaskService.js).
+- The dev server is configured in [vite.config.js](vite.config.js) to proxy /api requests to the Express backend on port 3000.
